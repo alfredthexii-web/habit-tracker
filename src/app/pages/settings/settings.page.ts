@@ -104,7 +104,7 @@ import { moonOutline, downloadOutline, cloudUploadOutline } from 'ionicons/icons
         <p class="footer-sub">Built with ❤️ and discipline</p>
       </div>
 
-      <div style="height: 100px;"></div>
+      <div style="height: 60px;"></div>
     </ion-content>
   `,
   styles: [`

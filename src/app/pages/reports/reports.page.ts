@@ -141,7 +141,7 @@ import { signal } from '@angular/core';
         </button>
       </div>
 
-      <div style="height: 100px;"></div>
+      <div style="height: 60px;"></div>
     </ion-content>
   `,
   styles: [`

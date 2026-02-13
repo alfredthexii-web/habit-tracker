@@ -134,7 +134,7 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
         }
       </div>
 
-      <div style="height: 100px;"></div>
+      <div style="height: 60px;"></div>
 
       <!-- Mood/Note Modal -->
       <ion-modal [isOpen]="showMoodModal()" (didDismiss)="showMoodModal.set(false)">
