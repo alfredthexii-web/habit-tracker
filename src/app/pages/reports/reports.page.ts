@@ -23,54 +23,52 @@ import { signal } from '@angular/core';
   ],
   template: `
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar>
         <ion-title>Reports</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
 
-      <!-- AI Insights Card -->
+      <!-- AI Insights -->
       @if (insights().length > 0) {
         <div class="insights-card">
-          <div class="insights-header">
-            <span class="insights-icon">💡</span>
-            <h3 class="insights-title">AI Insights</h3>
+          <div class="insights-accent"></div>
+          <div class="insights-body">
+            <h3 class="insights-title">💡 Insights</h3>
+            <ul class="insights-list">
+              @for (insight of insights(); track insight) {
+                <li class="insight-item">{{ insight }}</li>
+              }
+            </ul>
           </div>
-          <ul class="insights-list">
-            @for (insight of insights(); track insight) {
-              <li class="insight-item">{{ insight }}</li>
-            }
-          </ul>
         </div>
       }
 
       <!-- Mood Trends -->
       @if (hasMoodData()) {
-        <div class="report-card mood-card">
-          <h3 class="card-title">😊 Mood Trends <span class="card-subtitle">(7 Days)</span></h3>
-          <p-chart type="line" [data]="moodChartData()" [options]="moodChartOptions" height="200px"></p-chart>
+        <div class="section-card">
+          <h3 class="section-title">Mood Trends <span class="section-subtitle">7 days</span></h3>
+          <p-chart type="line" [data]="moodChartData()" [options]="moodChartOptions" height="180px"></p-chart>
         </div>
       }
 
-      <!-- Achievements — collectible cards -->
-      <div class="report-card achievements-card">
-        <h3 class="card-title">
-          🏆 Achievements
-          <span class="achievement-count">{{ profile().achievements.length }}</span>
+      <!-- Achievements -->
+      <div class="section-card">
+        <h3 class="section-title">
+          Achievements
+          <span class="badge-count">{{ profile().achievements.length }}</span>
         </h3>
         <div class="achievements-grid">
           @for (a of profile().achievements; track a.id) {
-            <div class="achievement-item unlocked">
-              <div class="achievement-icon-wrap">
-                <span class="achievement-icon">{{ a.icon }}</span>
-              </div>
+            <div class="achievement-item">
+              <span class="achievement-icon">{{ a.icon }}</span>
               <strong class="achievement-name">{{ a.name }}</strong>
               <small class="achievement-desc">{{ a.description }}</small>
             </div>
           }
           @if (profile().achievements.length === 0) {
             <div class="empty-achievements">
-              <span class="empty-trophy">🏅</span>
+              <span style="font-size: 2rem;">🏅</span>
               <p>Complete habits to unlock achievements!</p>
             </div>
           }
@@ -79,14 +77,11 @@ import { signal } from '@angular/core';
 
       <!-- Category Filter -->
       <div class="filter-pills">
-        <button class="filter-pill" [class.active]="!selectedCategory()" (click)="selectedCategory.set(null)">ALL</button>
+        <button class="pill" [class.active]="!selectedCategory()" (click)="selectedCategory.set(null)">All</button>
         @for (cat of categories; track cat) {
-          <button class="filter-pill"
+          <button class="pill"
             [class.active]="selectedCategory() === cat"
-            [style]="selectedCategory() === cat
-              ? 'background:' + getCatColor(cat) + '; color: #0B0F1A; box-shadow: 0 0 16px ' + getCatColor(cat) + '44;'
-              : 'color:' + getCatColor(cat)"
-            (click)="selectedCategory.set(cat)">{{ cat | uppercase }}</button>
+            (click)="selectedCategory.set(cat)">{{ cat }}</button>
         }
       </div>
 
@@ -98,18 +93,18 @@ import { signal } from '@angular/core';
       }
 
       @for (stat of filteredStats(); track stat.habitId) {
-        <div class="report-card stat-card">
-          <h3 class="card-title stat-habit-name">{{ stat.habitName }}</h3>
+        <div class="section-card stat-card">
+          <h3 class="section-title stat-name">{{ stat.habitName }}</h3>
+
+          <!-- Stats 2x2 Grid -->
           <div class="stats-grid">
             <div class="stat-box">
-              <span class="stat-emoji">🔥</span>
               <div class="stat-value">{{ stat.currentStreak }}</div>
-              <div class="stat-label">Current</div>
+              <div class="stat-label">🔥 Current</div>
             </div>
             <div class="stat-box">
-              <span class="stat-emoji">🏆</span>
               <div class="stat-value">{{ stat.bestStreak }}</div>
-              <div class="stat-label">Best</div>
+              <div class="stat-label">🏆 Best</div>
             </div>
             <div class="stat-box">
               <div class="stat-value">{{ stat.weeklyRate }}%</div>
@@ -120,6 +115,7 @@ import { signal } from '@angular/core';
               <div class="stat-label">Month</div>
             </div>
           </div>
+
           <div class="goal-section">
             <div class="goal-header">
               <span class="goal-label">Goal Progress</span>
@@ -127,13 +123,14 @@ import { signal } from '@angular/core';
             </div>
             <p-progressBar [value]="stat.goalProgress" [showValue]="false"></p-progressBar>
           </div>
+
           <div class="chart-section">
-            <p-chart type="bar" [data]="getChartData(stat.habitId)" [options]="chartOptions" height="180px"></p-chart>
+            <p-chart type="bar" [data]="getChartData(stat.habitId)" [options]="chartOptions" height="160px"></p-chart>
           </div>
         </div>
       }
 
-      <!-- Share Button -->
+      <!-- Share -->
       <div class="share-section">
         <button class="share-btn" (click)="shareProgress()">
           <ion-icon name="share-social-outline"></ion-icon>
@@ -145,30 +142,29 @@ import { signal } from '@angular/core';
   styles: [`
     :host { display: block; }
 
+    /* Insights */
     .insights-card {
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 16px;
-      background: linear-gradient(135deg, rgba(246, 166, 35, 0.12), rgba(255, 107, 107, 0.08));
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(246, 166, 35, 0.15);
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    :host-context(body:not(.dark)) .insights-card {
-      background: linear-gradient(135deg, rgba(246, 166, 35, 0.08), rgba(255, 107, 107, 0.04));
-      border-color: rgba(246, 166, 35, 0.12);
-    }
-    .insights-header {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      border-radius: 14px;
+      background: var(--card-bg);
+      overflow: hidden;
+      margin-bottom: 16px;
+      animation: slide-up 0.4s ease-out;
     }
-    .insights-icon { font-size: 1.5rem; }
+    .insights-accent {
+      width: 4px;
+      background: #FF6B4A;
+      flex-shrink: 0;
+    }
+    .insights-body {
+      padding: 16px;
+      flex: 1;
+    }
     .insights-title {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: 'Sora', sans-serif;
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1rem;
+      margin: 0 0 10px;
     }
     .insights-list {
       list-style: none;
@@ -176,252 +172,192 @@ import { signal } from '@angular/core';
       margin: 0;
     }
     .insight-item {
-      font-family: 'Outfit', sans-serif;
       font-size: 0.85rem;
-      color: #B8C2D4;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(46, 58, 88, 0.2);
+      color: var(--text-secondary);
+      padding: 4px 0;
     }
-    .insight-item:last-child { border-bottom: none; }
-    :host-context(body:not(.dark)) .insight-item { color: #4A5568; border-bottom-color: rgba(0,0,0,0.05); }
 
-    /* Report Cards */
-    .report-card {
-      border-radius: 20px;
-      padding: 22px;
+    /* Section Cards */
+    .section-card {
+      border-radius: 14px;
+      padding: 18px;
       margin-bottom: 16px;
-      background: rgba(21, 29, 48, 0.5);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(46, 58, 88, 0.25);
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+      background: var(--card-bg);
+      animation: slide-up 0.4s ease-out both;
     }
-    :host-context(body:not(.dark)) .report-card {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(0, 0, 0, 0.05);
-    }
-    .card-title {
-      font-family: 'Bricolage Grotesque', sans-serif;
+    .section-title {
+      font-family: 'Sora', sans-serif;
       font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 16px;
+      font-size: 1rem;
+      margin: 0 0 14px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .card-subtitle {
-      font-family: 'Outfit', sans-serif;
+    .section-subtitle {
+      font-family: 'DM Sans', sans-serif;
       font-weight: 500;
       font-size: 0.8rem;
-      color: #5A6B8A;
+      color: var(--text-muted);
+    }
+    .stat-name {
+      color: #FF6B4A;
     }
 
-    /* Achievements */
-    .achievement-count {
+    /* Badge count */
+    .badge-count {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 24px;
-      height: 24px;
-      border-radius: 8px;
-      font-family: 'Outfit', sans-serif;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.75rem;
       font-weight: 700;
-      background: rgba(246, 166, 35, 0.15);
-      color: #F6A623;
-      padding: 0 8px;
+      background: rgba(255, 107, 74, 0.12);
+      color: #FF6B4A;
+      padding: 0 6px;
     }
+
+    /* Achievements */
     .achievements-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
     }
     .achievement-item {
       text-align: center;
-      padding: 16px 8px;
-      border-radius: 16px;
-      background: rgba(27, 37, 64, 0.5);
-      border: 1px solid rgba(246, 166, 35, 0.1);
-      transition: transform 0.2s ease;
+      padding: 14px 8px;
+      border-radius: 12px;
+      background: rgba(255, 107, 74, 0.04);
     }
-    :host-context(body:not(.dark)) .achievement-item {
-      background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(0, 0, 0, 0.05);
-    }
-    .achievement-item.unlocked {
-      animation: glow-pulse 2.5s ease-in-out infinite;
-    }
-    .achievement-icon-wrap {
-      width: 48px; height: 48px;
-      margin: 0 auto 8px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, rgba(246, 166, 35, 0.15), rgba(255, 107, 107, 0.1));
-    }
-    .achievement-icon { font-size: 1.8rem; }
+    .achievement-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
     .achievement-name {
       display: block;
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      margin-top: 4px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
     .achievement-desc {
       display: block;
-      font-family: 'Outfit', sans-serif;
       font-size: 0.65rem;
-      color: #5A6B8A;
+      color: var(--text-muted);
       margin-top: 2px;
     }
     .empty-achievements {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 24px;
-    }
-    .empty-trophy { font-size: 2.5rem; display: block; margin-bottom: 8px; }
-    .empty-achievements p {
-      font-family: 'Outfit', sans-serif;
+      padding: 20px;
+      color: var(--text-muted);
       font-size: 0.85rem;
-      color: #5A6B8A;
     }
 
     /* Filter Pills */
     .filter-pills {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
-    .filter-pill {
-      padding: 6px 16px;
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 8px 16px;
       border-radius: 100px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      background: rgba(27, 37, 64, 0.5);
-      color: #5A6B8A;
-      border: 1px solid rgba(46, 58, 88, 0.3);
-      transition: all 0.25s ease;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
-    :host-context(body:not(.dark)) .filter-pill {
-      background: rgba(0, 0, 0, 0.04);
-      border-color: rgba(0, 0, 0, 0.06);
-      color: #6B7A94;
-    }
-    .filter-pill.active {
-      background: #F6A623;
-      color: #0B0F1A;
-      border-color: transparent;
-      box-shadow: 0 0 16px rgba(246, 166, 35, 0.35);
+    .pill.active {
+      background: #FF6B4A;
+      color: #fff;
+      border-color: #FF6B4A;
     }
 
     /* Stats Grid */
-    .stat-habit-name {
-      background: linear-gradient(135deg, #F6A623, #FF6B6B);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .stat-box {
-      padding: 12px 4px;
-      border-radius: 14px;
-      background: rgba(27, 37, 64, 0.4);
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: 12px;
+      background: rgba(255, 107, 74, 0.04);
     }
-    :host-context(body:not(.dark)) .stat-box {
-      background: rgba(0, 0, 0, 0.03);
-    }
-    .stat-emoji { font-size: 1.2rem; display: block; margin-bottom: 4px; }
     .stat-value {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 800;
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
     }
     .stat-label {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       font-weight: 500;
-      color: #5A6B8A;
+      color: var(--text-muted);
       margin-top: 2px;
     }
 
-    /* Goal Section */
-    .goal-section { margin-bottom: 20px; }
+    /* Goal */
+    .goal-section { margin-bottom: 16px; }
     .goal-header {
       display: flex;
       justify-content: space-between;
       margin-bottom: 8px;
     }
     .goal-label {
-      font-family: 'Outfit', sans-serif;
       font-size: 0.85rem;
-      font-weight: 600;
-      color: #8694AD;
+      font-weight: 500;
+      color: var(--text-secondary);
     }
     .goal-pct {
-      font-family: 'Bricolage Grotesque', sans-serif;
+      font-family: 'Sora', sans-serif;
       font-size: 0.85rem;
       font-weight: 700;
-      color: #F6A623;
+      color: #FF6B4A;
     }
 
-    /* Chart */
     .chart-section { margin-top: 8px; }
 
-    /* Empty State */
+    /* Empty */
     .empty-state {
       text-align: center;
-      padding: 48px 16px;
+      padding: 40px 16px;
       animation: fade-in 0.4s ease-out;
     }
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: 12px;
-      animation: float 3s ease-in-out infinite;
-    }
-    .empty-text {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9rem;
-      color: #5A6B8A;
-    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-text { font-size: 0.95rem; color: var(--text-muted); }
 
     /* Share */
-    .share-section {
-      margin: 24px 0 32px;
-    }
+    .share-section { margin: 20px 0 16px; }
     .share-btn {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: 16px;
-      border-radius: 16px;
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #2DD4A8, #1AAE8A);
-      color: #0B0F1A;
+      padding: 14px;
+      border-radius: 14px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      background: #FF6B4A;
+      color: #ffffff;
       border: none;
-      box-shadow: 0 4px 24px rgba(45, 212, 168, 0.3);
-      transition: all 0.25s ease;
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
-    .share-btn:active {
-      transform: scale(0.98);
-    }
-    .share-btn ion-icon {
-      font-size: 1.2rem;
-    }
+    .share-btn:active { transform: scale(0.98); }
+    .share-btn ion-icon { font-size: 1.1rem; }
   `],
 })
 export class ReportsPage {
@@ -446,12 +382,12 @@ export class ReportsPage {
     datasets: [{
       label: 'Mood',
       data: this.moodData().data,
-      borderColor: '#F6A623',
-      backgroundColor: 'rgba(246, 166, 35, 0.15)',
+      borderColor: '#FF6B4A',
+      backgroundColor: 'rgba(255, 107, 74, 0.1)',
       tension: 0.4,
       fill: true,
-      pointBackgroundColor: '#FF6B6B',
-      pointBorderColor: '#FF6B6B',
+      pointBackgroundColor: '#FF6B4A',
+      pointBorderColor: '#FF6B4A',
       pointRadius: 4,
       pointHoverRadius: 6,
     }],
@@ -462,11 +398,11 @@ export class ReportsPage {
     scales: {
       y: {
         beginAtZero: true, max: 5,
-        ticks: { stepSize: 1, callback: (v: number) => ['', '😔', '😤', '😐', '🔥', '😊'][v] || '', color: '#5A6B8A' },
-        grid: { color: 'rgba(46, 58, 88, 0.2)' },
+        ticks: { stepSize: 1, callback: (v: number) => ['', '😔', '😤', '😐', '🔥', '😊'][v] || '', color: '#6B7280' },
+        grid: { color: 'rgba(107, 114, 128, 0.1)' },
       },
       x: {
-        ticks: { color: '#5A6B8A' },
+        ticks: { color: '#6B7280' },
         grid: { display: false },
       },
     },
@@ -477,11 +413,11 @@ export class ReportsPage {
     scales: {
       y: {
         beginAtZero: true, max: 7,
-        ticks: { stepSize: 1, color: '#5A6B8A' },
-        grid: { color: 'rgba(46, 58, 88, 0.2)' },
+        ticks: { stepSize: 1, color: '#6B7280' },
+        grid: { color: 'rgba(107, 114, 128, 0.1)' },
       },
       x: {
-        ticks: { color: '#5A6B8A' },
+        ticks: { color: '#6B7280' },
         grid: { display: false },
       },
     },
@@ -500,9 +436,9 @@ export class ReportsPage {
       datasets: [{
         label: 'Completions',
         data: weeklyData.data,
-        backgroundColor: 'rgba(246, 166, 35, 0.6)',
-        hoverBackgroundColor: '#F6A623',
-        borderRadius: 8,
+        backgroundColor: 'rgba(255, 107, 74, 0.5)',
+        hoverBackgroundColor: '#FF6B4A',
+        borderRadius: 6,
         borderSkipped: false,
       }],
     };

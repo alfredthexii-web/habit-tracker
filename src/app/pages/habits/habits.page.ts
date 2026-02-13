@@ -42,18 +42,15 @@ import {
       <!-- Category Filter -->
       <div class="filter-pills">
         <button (click)="selectedCategory.set(null)"
-                class="filter-pill"
+                class="pill"
                 [class.active]="!selectedCategory()">
-          ALL
+          All
         </button>
         @for (cat of categories; track cat) {
           <button (click)="selectedCategory.set(cat)"
-                  class="filter-pill"
-                  [class.active]="selectedCategory() === cat"
-                  [style]="selectedCategory() === cat
-                    ? 'background:' + getCatColor(cat) + '; color: #0B0F1A; box-shadow: 0 0 16px ' + getCatColor(cat) + '44;'
-                    : 'color:' + getCatColor(cat)">
-            {{ cat | uppercase }}
+                  class="pill"
+                  [class.active]="selectedCategory() === cat">
+            {{ cat }}
           </button>
         }
       </div>
@@ -62,52 +59,47 @@ import {
         <div class="empty-state">
           <div class="empty-icon">💪</div>
           <p class="empty-text">
-            No habits yet. Tap <span style="color: #F6A623; font-weight: 700;">+</span> to start building your routine!
+            No habits yet. Tap <span style="color: #FF6B4A; font-weight: 700;">+</span> to add one!
           </p>
         </div>
       }
 
       <!-- Habit Cards -->
-      <div class="habits-grid">
+      <div class="habits-list">
         @for (habit of filteredHabits(); track habit.id; let i = $index) {
           <ion-item-sliding>
-            <ion-item class="!--background-transparent">
-              <div class="habit-manage-card" [style.animation-delay]="(i * 0.06) + 's'">
-                <div class="habit-manage-header">
-                  <div class="cat-dot-lg" [style.background]="getCatColor(habit.category)"
-                       [style.box-shadow]="'0 0 12px ' + getCatColor(habit.category) + '55'"></div>
-                  <div class="habit-manage-info">
-                    <h3 class="habit-manage-name">{{ habit.name }}</h3>
-                    <p class="habit-manage-desc">{{ habit.description }}</p>
+            <ion-item class="habit-item-wrapper">
+              <div class="habit-manage-card" [style.animation-delay]="(i * 0.04) + 's'">
+                <div class="card-accent" [style.background]="getCatColor(habit.category)"></div>
+                <div class="card-content">
+                  <div class="card-main">
+                    <div class="card-info">
+                      <h3 class="habit-name">{{ habit.name }}</h3>
+                      @if (habit.description) {
+                        <p class="habit-desc">{{ habit.description }}</p>
+                      }
+                    </div>
+                    <span class="cat-badge" [style.color]="getCatColor(habit.category)">
+                      {{ habit.category }}
+                    </span>
                   </div>
-                  <span class="cat-badge"
-                        [style.background]="getCatColor(habit.category) + '18'"
-                        [style.color]="getCatColor(habit.category)">
-                    {{ habit.category }}
-                  </span>
-                </div>
-                <div class="habit-manage-tags">
-                  <span class="habit-tag">
-                    📅 {{ getScheduleLabel(habit) }}
-                  </span>
-                  @if (habit.goal) {
-                    <span class="habit-tag goal">
-                      🎯 {{ habit.goal }}x/week
-                    </span>
-                  }
-                  @if (habit.reminderTime) {
-                    <span class="habit-tag reminder">
-                      ⏰ {{ habit.reminderTime }}
-                    </span>
-                  }
+                  <div class="card-tags">
+                    <span class="tag">📅 {{ getScheduleLabel(habit) }}</span>
+                    @if (habit.goal) {
+                      <span class="tag">🎯 {{ habit.goal }}x/week</span>
+                    }
+                    @if (habit.reminderTime) {
+                      <span class="tag">⏰ {{ habit.reminderTime }}</span>
+                    }
+                  </div>
                 </div>
               </div>
             </ion-item>
             <ion-item-options side="end">
-              <ion-item-option style="--background: #2DD4A8;" (click)="editHabit(habit)">
+              <ion-item-option style="--background: #4ADE80; --color: #111116;" (click)="editHabit(habit)">
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option style="--background: #FF6B6B;" (click)="deleteHabit(habit.id)">
+              <ion-item-option style="--background: #EF4444;" (click)="deleteHabit(habit.id)">
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-item-option>
             </ion-item-options>
@@ -115,25 +107,26 @@ import {
         }
       </div>
 
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+      <!-- FABs with proper bottom offset above tab bar -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 16px;">
         <ion-fab-button (click)="openModal()">
           <ion-icon name="add-outline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
 
-      <ion-fab vertical="bottom" horizontal="start" slot="fixed">
+      <ion-fab vertical="bottom" horizontal="start" slot="fixed" style="margin-bottom: 16px;">
         <ion-fab-button color="secondary" (click)="showTemplates.set(true)">
           <ion-icon name="flash-outline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
 
       <!-- Templates Dialog -->
-      <p-dialog header="⚡ Quick Add Templates" [(visible)]="templateDialogVisible" [modal]="true"
+      <p-dialog header="Quick Add Templates" [(visible)]="templateDialogVisible" [modal]="true"
         [style]="{ width: '90vw', maxWidth: '400px' }" [draggable]="false" [resizable]="false">
         <div class="template-list">
           @for (t of templates; track t.name) {
             <button class="template-item" (click)="addFromTemplate(t)">
-              <span class="cat-dot-sm" [style.background]="getCatColor(t.category)"></span>
+              <div class="template-accent" [style.background]="getCatColor(t.category)"></div>
               <div class="template-info">
                 <div class="template-name">{{ t.name }}</div>
                 <div class="template-desc">{{ t.description }}</div>
@@ -228,145 +221,117 @@ import {
 
     .filter-pills {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 24px;
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      animation: slide-up 0.4s ease-out;
     }
-    .filter-pill {
-      padding: 6px 16px;
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 8px 16px;
       border-radius: 100px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      background: rgba(27, 37, 64, 0.5);
-      color: #5A6B8A;
-      border: 1px solid rgba(46, 58, 88, 0.3);
-      transition: all 0.25s ease;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
-    :host-context(body:not(.dark)) .filter-pill {
-      background: rgba(0, 0, 0, 0.04);
-      border-color: rgba(0, 0, 0, 0.06);
-      color: #6B7A94;
-    }
-    .filter-pill.active {
-      background: #F6A623;
-      color: #0B0F1A;
-      border-color: transparent;
-      box-shadow: 0 0 16px rgba(246, 166, 35, 0.35);
+    .pill.active {
+      background: #FF6B4A;
+      color: #ffffff;
+      border-color: #FF6B4A;
     }
 
     .empty-state {
       text-align: center;
-      padding: 64px 16px;
+      padding: 48px 16px;
       animation: fade-in 0.4s ease-out;
     }
-    .empty-icon {
-      font-size: 3.5rem;
-      margin-bottom: 16px;
-      animation: float 3s ease-in-out infinite;
-    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
     .empty-text {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9rem;
-      color: #5A6B8A;
+      font-size: 0.95rem;
+      color: var(--text-muted);
     }
 
-    .habits-grid {
+    .habits-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+    }
+
+    .habit-item-wrapper {
+      --background: transparent;
+      --padding-start: 0;
+      --inner-padding-end: 0;
+      --min-height: auto;
     }
 
     .habit-manage-card {
       width: 100%;
-      border-radius: 20px;
-      padding: 18px;
-      background: rgba(21, 29, 48, 0.5);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(46, 58, 88, 0.25);
-      transition: all 0.3s ease;
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+      display: flex;
+      border-radius: 14px;
+      background: var(--card-bg);
+      overflow: hidden;
+      animation: slide-up 0.4s ease-out both;
     }
-    :host-context(body:not(.dark)) .habit-manage-card {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(0, 0, 0, 0.05);
+    .card-accent {
+      width: 4px;
+      flex-shrink: 0;
     }
-
-    .habit-manage-header {
+    .card-content {
+      flex: 1;
+      padding: 14px 16px;
+    }
+    .card-main {
       display: flex;
       align-items: flex-start;
       gap: 12px;
     }
-
-    .cat-dot-lg {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 6px;
-    }
-
-    .habit-manage-info {
+    .card-info {
       flex: 1;
       min-width: 0;
     }
-    .habit-manage-name {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 2px;
+    .habit-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0;
     }
-    .habit-manage-desc {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.78rem;
-      color: #5A6B8A;
-      margin-bottom: 0;
+    .habit-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 2px 0 0;
     }
-
     .cat-badge {
-      padding: 4px 12px;
-      border-radius: 100px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.65rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.04em;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
       flex-shrink: 0;
     }
-
-    .habit-manage-tags {
+    .card-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 12px;
-      padding-left: 24px;
+      margin-top: 10px;
     }
-    .habit-tag {
+    .tag {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       padding: 4px 10px;
       border-radius: 8px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      background: rgba(27, 37, 64, 0.5);
-      color: #5A6B8A;
-    }
-    :host-context(body:not(.dark)) .habit-tag {
-      background: rgba(0, 0, 0, 0.04);
-    }
-    .habit-tag.goal {
-      background: rgba(246, 166, 35, 0.1);
-      color: #F6A623;
-    }
-    .habit-tag.reminder {
-      background: rgba(255, 107, 107, 0.1);
-      color: #FF6B6B;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: rgba(255, 107, 74, 0.06);
+      color: var(--text-secondary);
     }
 
     .template-list {
@@ -378,38 +343,37 @@ import {
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 16px;
-      border-radius: 16px;
-      background: rgba(27, 37, 64, 0.5);
-      border: 1px solid rgba(46, 58, 88, 0.25);
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       text-align: left;
-      transition: all 0.2s ease;
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
     .template-item:active {
       transform: scale(0.98);
     }
-    .cat-dot-sm {
-      width: 10px; height: 10px;
-      border-radius: 50%;
+    .template-accent {
+      width: 4px;
+      height: 32px;
+      border-radius: 2px;
       flex-shrink: 0;
     }
     .template-info { min-width: 0; }
     .template-name {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
       font-size: 0.9rem;
     }
     .template-desc {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.75rem;
-      color: #5A6B8A;
+      font-size: 0.78rem;
+      color: var(--text-muted);
     }
 
     .reminder-note {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.78rem;
-      color: #FF6B6B;
+      font-size: 0.82rem;
+      color: #FF6B4A;
       padding: 0 16px;
       margin-top: 8px;
     }

@@ -28,88 +28,65 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <!-- Hero Section — glassmorphism card -->
-      <div class="hero-card">
-        <div class="hero-mesh"></div>
-        <div class="hero-content">
-          <p class="hero-greeting">{{ greeting }}</p>
-          <h1 class="hero-title">
-            <span class="gradient-text-warm">Day {{ dayOfJourney }}</span> of your journey
-          </h1>
-          <p class="hero-date">{{ todayFormatted }}</p>
+      <!-- Header -->
+      <div class="today-header">
+        <p class="greeting">{{ greeting }}</p>
+        <h1 class="today-title">{{ todayFormatted }}</h1>
+      </div>
 
-          @if (completionPct() === 100 && totalCount() > 0) {
-            <div class="perfect-day-badge">
-              ⭐ PERFECT DAY — You're unstoppable!
-            </div>
+      <!-- Progress Bar -->
+      @if (totalCount() > 0) {
+        <div class="progress-section">
+          <div class="progress-info">
+            <span class="progress-label">{{ completedCount() }}/{{ totalCount() }} completed</span>
+            <span class="progress-pct">{{ completionPct() }}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="completionPct()"></div>
+          </div>
+        </div>
+      }
+
+      <!-- XP Bar -->
+      <div class="xp-section">
+        <div class="xp-info">
+          <span class="xp-label">Level {{ profile().level }}</span>
+          <span class="xp-value">{{ profile().xp }} XP</span>
+        </div>
+        <div class="xp-track">
+          <div class="xp-fill" [style.width.%]="xpProgress()"></div>
+        </div>
+      </div>
+
+      @if (completionPct() === 100 && totalCount() > 0) {
+        <div class="perfect-day">
+          ⭐ Perfect day — you crushed it!
+        </div>
+      }
+
+      <!-- Category Filter (only if 3+ categories in use) -->
+      @if (usedCategories().length >= 3) {
+        <div class="filter-pills">
+          <button (click)="selectedCategory.set(null)"
+                  class="pill"
+                  [class.active]="!selectedCategory()">
+            All
+          </button>
+          @for (cat of usedCategories(); track cat) {
+            <button (click)="selectedCategory.set(cat)"
+                    class="pill"
+                    [class.active]="selectedCategory() === cat">
+              {{ cat }}
+            </button>
           }
         </div>
-
-        <!-- Completion Ring -->
-        <div class="completion-ring">
-          <svg viewBox="0 0 100 100">
-            <defs>
-              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#F6A623"/>
-                <stop offset="100%" stop-color="#FF6B6B"/>
-              </linearGradient>
-            </defs>
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(46,58,88,0.3)" stroke-width="5"/>
-            <circle cx="50" cy="50" r="42" fill="none"
-                    stroke="url(#ringGrad)"
-                    stroke-width="5" stroke-linecap="round"
-                    [attr.stroke-dasharray]="264"
-                    [attr.stroke-dashoffset]="264 - (264 * completionPct() / 100)"
-                    class="ring-progress"/>
-          </svg>
-          <div class="ring-label">
-            <span class="ring-pct">{{ completionPct() }}%</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- XP Bar — game-like -->
-      <div class="xp-section">
-        <div class="xp-badge">
-          <span class="xp-level">{{ profile().level }}</span>
-          <div class="xp-badge-shine"></div>
-        </div>
-        <div class="xp-bar-container">
-          <div class="xp-info">
-            <span class="xp-label">Level {{ profile().level }}</span>
-            <span class="xp-value">{{ profile().xp }} XP</span>
-          </div>
-          <div class="xp-track">
-            <div class="xp-fill" [style.width.%]="xpProgress()"></div>
-            <div class="xp-shimmer"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Category Filter Pills -->
-      <div class="filter-pills">
-        <button (click)="selectedCategory.set(null)"
-                class="filter-pill"
-                [class.active]="!selectedCategory()">
-          ALL
-        </button>
-        @for (cat of categories; track cat) {
-          <button (click)="selectedCategory.set(cat)"
-                  class="filter-pill"
-                  [class.active]="selectedCategory() === cat"
-                  [style]="selectedCategory() === cat
-                    ? 'background:' + getCatColor(cat) + '; color: #0B0F1A; box-shadow: 0 0 16px ' + getCatColor(cat) + '44;'
-                    : 'color:' + getCatColor(cat)">
-            {{ cat | uppercase }}
-          </button>
-        }
-      </div>
+      }
 
       @if (filteredHabits().length === 0) {
         <div class="empty-state">
           <div class="empty-icon">🌅</div>
           <p class="empty-text">
-            No habits for today. Hit the Habits tab to start your journey!
+            No habits for today. Head to Habits to start!
           </p>
         </div>
       }
@@ -119,49 +96,36 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
         @for (habit of filteredHabits(); track habit.id; let i = $index) {
           <div class="habit-card"
                [class.completed]="isCompleted(habit.id)"
-               [style.animation-delay]="(i * 0.06) + 's'">
-
-            @if (isCompleted(habit.id)) {
-              <div class="completed-accent" [style.background]="getCatColor(habit.category)"></div>
-            }
-
-            <div class="habit-row">
-              <!-- Custom Checkbox -->
-              <button (click)="onToggle(habit.id)"
-                      class="habit-checkbox"
-                      [class.checked]="isCompleted(habit.id)"
-                      [style]="isCompleted(habit.id)
-                        ? 'background: linear-gradient(135deg, ' + getCatColor(habit.category) + ', ' + getCatColor(habit.category) + 'cc); box-shadow: 0 0 20px ' + getCatColor(habit.category) + '44;'
-                        : ''">
-                @if (isCompleted(habit.id)) {
-                  <svg class="check-icon" fill="none" stroke="#0B0F1A" stroke-width="3" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                  </svg>
+               [style.animation-delay]="(i * 0.04) + 's'">
+            <div class="card-accent" [style.background]="getCatColor(habit.category)"></div>
+            <div class="card-body" (click)="onToggle(habit.id)">
+              <div class="card-info">
+                <h3 class="habit-name" [class.done]="isCompleted(habit.id)">{{ habit.name }}</h3>
+                @if (habit.description) {
+                  <p class="habit-desc">{{ habit.description }}</p>
                 }
-              </button>
-
-              <!-- Habit Info -->
-              <div class="habit-info">
-                <div class="habit-name-row">
-                  <span class="cat-dot" [style.background]="getCatColor(habit.category)"
-                        [style.box-shadow]="'0 0 8px ' + getCatColor(habit.category) + '55'"></span>
-                  <h3 class="habit-name" [class.done]="isCompleted(habit.id)">
-                    {{ habit.name }}
-                  </h3>
-                </div>
-                <p class="habit-desc">{{ habit.description }}</p>
                 @if (getCompletion(habit.id)?.mood) {
                   <span class="mood-display">{{ getCompletion(habit.id)?.mood }}</span>
                 }
               </div>
-
-              <!-- Streak Badge -->
-              @if (getStreak(habit.id) > 0) {
-                <div class="streak-badge">
-                  <span class="streak-flame">🔥</span>
-                  <span class="streak-count">{{ getStreak(habit.id) }}</span>
+              <div class="card-right">
+                @if (getStreak(habit.id) > 0) {
+                  <div class="streak-badge">
+                    <span>🔥</span>
+                    <span>{{ getStreak(habit.id) }}</span>
+                  </div>
+                }
+                <div class="check-circle"
+                     [class.checked]="isCompleted(habit.id)"
+                     [style.border-color]="isCompleted(habit.id) ? getCatColor(habit.category) : ''"
+                     [style.background]="isCompleted(habit.id) ? getCatColor(habit.category) : ''">
+                  @if (isCompleted(habit.id)) {
+                    <svg fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24" width="16" height="16">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  }
                 </div>
-              }
+              </div>
             </div>
           </div>
         }
@@ -212,358 +176,245 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
   styles: [`
     :host { display: block; }
 
-    /* Hero Card */
-    .hero-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 24px;
-      margin-bottom: 24px;
-      padding: 28px;
-      background: rgba(21, 29, 48, 0.6);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(246, 166, 35, 0.1);
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    .today-header {
+      margin-bottom: 20px;
+      animation: slide-up 0.4s ease-out;
     }
-    :host-context(body:not(.dark)) .hero-card {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(0, 0, 0, 0.06);
+    .greeting {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 4px;
     }
-    .hero-mesh {
-      position: absolute;
-      top: -50%; right: -30%;
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, rgba(246, 166, 35, 0.12) 0%, transparent 70%);
-      pointer-events: none;
+    .today-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
-    .hero-content { position: relative; z-index: 1; }
-    .hero-greeting {
-      font-family: 'Outfit', sans-serif;
+
+    /* Progress */
+    .progress-section {
+      margin-bottom: 16px;
+      animation: slide-up 0.4s ease-out 0.05s both;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .progress-label {
       font-size: 0.85rem;
       font-weight: 500;
-      color: #8694AD;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
+      color: var(--text-secondary);
     }
-    :host-context(body:not(.dark)) .hero-greeting { color: #6B7A94; }
-    .hero-title {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1.75rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 4px;
-      line-height: 1.2;
-    }
-    .hero-date {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.85rem;
-      color: #5A6B8A;
-    }
-    .perfect-day-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 8px 20px;
-      border-radius: 100px;
-      font-family: 'Bricolage Grotesque', sans-serif;
+    .progress-pct {
+      font-family: 'Sora', sans-serif;
       font-size: 0.85rem;
       font-weight: 700;
-      background: linear-gradient(135deg, rgba(246, 166, 35, 0.2), rgba(255, 107, 107, 0.2));
-      border: 1px solid rgba(246, 166, 35, 0.3);
-      animation: celebrate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      color: #FF6B4A;
     }
-
-    /* Completion Ring */
-    .completion-ring {
-      position: absolute;
-      top: 20px; right: 20px;
-      width: 80px; height: 80px;
-    }
-    .completion-ring svg {
-      width: 100%; height: 100%;
-      transform: rotate(-90deg);
-    }
-    .ring-progress {
-      transition: stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .ring-label {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ring-pct {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #F6A623, #FF6B6B);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* XP Section */
-    .xp-section {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 24px;
-      padding: 0 4px;
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
-    }
-    .xp-badge {
-      position: relative;
-      width: 48px; height: 48px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #F6A623, #FFD93D);
-      box-shadow: 0 0 20px rgba(246, 166, 35, 0.35);
+    .progress-track {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--card-bg);
       overflow: hidden;
     }
-    .xp-badge-shine {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%);
-      background-size: 200% 100%;
-      animation: badge-shine 3s ease-in-out infinite;
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #FF6B4A, #FF8F6B);
+      transition: width 0.6s ease-out;
     }
-    .xp-level {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: #0B0F1A;
-      position: relative;
-      z-index: 1;
+
+    /* XP */
+    .xp-section {
+      margin-bottom: 20px;
+      animation: slide-up 0.4s ease-out 0.1s both;
     }
-    .xp-bar-container { flex: 1; }
     .xp-info {
       display: flex;
       justify-content: space-between;
       margin-bottom: 6px;
     }
     .xp-label {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #8694AD;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
     }
     .xp-value {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, #F6A623, #FF6B6B);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
     }
     .xp-track {
-      height: 10px;
-      border-radius: 8px;
-      background: rgba(27, 37, 64, 0.6);
+      height: 6px;
+      border-radius: 3px;
+      background: var(--card-bg);
       overflow: hidden;
-      position: relative;
     }
-    :host-context(body:not(.dark)) .xp-track { background: #E0DCD4; }
     .xp-fill {
       height: 100%;
-      border-radius: 8px;
-      background: linear-gradient(90deg, #F6A623, #FFD93D, #FF6B6B);
-      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      position: relative;
+      border-radius: 3px;
+      background: #4ADE80;
+      transition: width 0.6s ease-out;
     }
-    .xp-shimmer {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-      background-size: 200% 100%;
-      animation: shimmer 2s linear infinite;
+
+    .perfect-day {
+      text-align: center;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255, 107, 74, 0.1);
+      color: #FF6B4A;
+      animation: fade-in 0.4s ease-out;
     }
 
     /* Filter Pills */
     .filter-pills {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 24px;
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      animation: slide-up 0.4s ease-out 0.1s both;
     }
-    .filter-pill {
-      padding: 6px 16px;
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 8px 16px;
       border-radius: 100px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      background: rgba(27, 37, 64, 0.5);
-      color: #5A6B8A;
-      border: 1px solid rgba(46, 58, 88, 0.3);
-      transition: all 0.25s ease;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
-    :host-context(body:not(.dark)) .filter-pill {
-      background: rgba(0, 0, 0, 0.04);
-      border-color: rgba(0, 0, 0, 0.06);
-      color: #6B7A94;
-    }
-    .filter-pill.active {
-      background: #F6A623;
-      color: #0B0F1A;
-      border-color: transparent;
-      box-shadow: 0 0 16px rgba(246, 166, 35, 0.35);
+    .pill.active {
+      background: #FF6B4A;
+      color: #ffffff;
+      border-color: #FF6B4A;
     }
 
     /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 64px 16px;
+      padding: 48px 16px;
       animation: fade-in 0.4s ease-out;
     }
-    .empty-icon {
-      font-size: 3.5rem;
-      margin-bottom: 16px;
-      animation: float 3s ease-in-out infinite;
-    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
     .empty-text {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9rem;
-      color: #5A6B8A;
+      font-size: 0.95rem;
+      color: var(--text-muted);
     }
 
     /* Habit List */
     .habit-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     /* Habit Card */
     .habit-card {
-      position: relative;
-      border-radius: 20px;
-      padding: 18px;
-      background: rgba(21, 29, 48, 0.5);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(46, 58, 88, 0.25);
-      transition: all 0.3s ease;
-      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    :host-context(body:not(.dark)) .habit-card {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(0, 0, 0, 0.05);
+      display: flex;
+      border-radius: 14px;
+      background: var(--card-bg);
+      overflow: hidden;
+      transition: opacity 0.3s ease-out, transform 0.2s ease-out;
+      animation: slide-up 0.4s ease-out both;
     }
     .habit-card.completed {
-      opacity: 0.65;
+      opacity: 0.55;
     }
     .habit-card:active {
       transform: scale(0.99);
     }
-
-    .completed-accent {
-      position: absolute;
-      left: 0; top: 12px; bottom: 12px;
-      width: 3px;
-      border-radius: 3px;
-    }
-
-    .habit-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    /* Custom Checkbox */
-    .habit-checkbox {
+    .card-accent {
+      width: 4px;
       flex-shrink: 0;
-      width: 46px; height: 46px;
-      border-radius: 14px;
+    }
+    .card-body {
+      flex: 1;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: rgba(27, 37, 64, 0.6);
-      border: 2px solid rgba(90, 107, 138, 0.3);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 14px 16px;
+      gap: 12px;
       cursor: pointer;
+      min-height: 56px;
     }
-    :host-context(body:not(.dark)) .habit-checkbox {
-      background: rgba(0, 0, 0, 0.04);
-      border-color: rgba(0, 0, 0, 0.12);
-    }
-    .habit-checkbox.checked {
-      border-color: transparent;
-      animation: completion-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .check-icon {
-      width: 22px; height: 22px;
-    }
-
-    /* Habit Info */
-    .habit-info {
+    .card-info {
       flex: 1;
       min-width: 0;
     }
-    .habit-name-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 2px;
-    }
-    .cat-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
     .habit-name {
-      font-family: 'Bricolage Grotesque', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
       letter-spacing: -0.01em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      transition: all 0.3s ease;
+      margin: 0;
+      transition: color 0.2s ease-out;
     }
     .habit-name.done {
       text-decoration: line-through;
-      color: #5A6B8A;
+      color: var(--text-muted);
     }
     .habit-desc {
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.78rem;
-      color: #5A6B8A;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 2px 0 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .mood-display {
-      font-size: 1.2rem;
-      margin-top: 4px;
+      font-size: 1rem;
+      margin-top: 2px;
       display: inline-block;
     }
 
-    /* Streak Badge */
+    .card-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Streak */
     .streak-badge {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 6px 14px;
-      border-radius: 100px;
-      font-family: 'Outfit', sans-serif;
+      gap: 3px;
+      font-family: 'Sora', sans-serif;
       font-size: 0.78rem;
       font-weight: 700;
-      background: rgba(255, 107, 107, 0.12);
-      color: #FF6B6B;
+      color: #FF6B4A;
+    }
+
+    /* Check Circle */
+    .check-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease-out;
       flex-shrink: 0;
     }
-    .streak-flame {
-      display: inline-block;
-      animation: flame-dance 1.2s ease-in-out infinite;
-    }
-    .streak-count {
-      animation: streak-glow 2.5s ease-in-out infinite;
+    .check-circle.checked {
+      border-color: transparent;
+      transform: scale(1.05);
     }
 
     /* Mood Picker */
@@ -574,26 +425,18 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
       margin: 32px 0;
     }
     .mood-btn {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       padding: 12px;
-      border-radius: 20px;
-      background: rgba(27, 37, 64, 0.5);
+      border-radius: 16px;
+      background: var(--card-bg);
       border: 2px solid transparent;
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.2s ease-out;
       cursor: pointer;
     }
     .mood-btn.selected {
-      background: rgba(246, 166, 35, 0.15);
-      border-color: #F6A623;
-      box-shadow: 0 0 24px rgba(246, 166, 35, 0.3);
-      transform: scale(1.1);
-    }
-    :host-context(body:not(.dark)) .mood-btn {
-      background: rgba(0, 0, 0, 0.03);
-    }
-    :host-context(body:not(.dark)) .mood-btn.selected {
-      background: rgba(212, 137, 26, 0.12);
-      border-color: #D4891A;
+      background: rgba(255, 107, 74, 0.1);
+      border-color: #FF6B4A;
+      transform: scale(1.08);
     }
   `],
 })
@@ -602,7 +445,6 @@ export class TodayPage {
   todayStr: string;
   todayFormatted: string;
   greeting: string;
-  dayOfJourney: number;
   categories = ALL_CATEGORIES;
   moodEmojis = MOOD_EMOJIS;
   selectedCategory = signal<HabitCategory | null>(null);
@@ -615,6 +457,10 @@ export class TodayPage {
   xpProgress = computed(() => (this.profile().xp % 100));
 
   dueHabits = computed(() => this.habitService.getHabitsForDate(this.today));
+  usedCategories = computed(() => {
+    const cats = new Set(this.dueHabits().map(h => h.category));
+    return ALL_CATEGORIES.filter(c => cats.has(c));
+  });
   filteredHabits = computed(() => {
     const cat = this.selectedCategory();
     const habits = this.dueHabits();
@@ -638,19 +484,11 @@ export class TodayPage {
     habitService.requestNotificationPermission();
 
     const hour = this.today.getHours();
-    if (hour < 6) this.greeting = 'Burning the midnight oil, warrior 🌙';
-    else if (hour < 12) this.greeting = 'Good morning, champion ☀️';
-    else if (hour < 17) this.greeting = 'Stay locked in 💪';
-    else if (hour < 21) this.greeting = 'Keep pushing tonight 🔥';
-    else this.greeting = 'Finish strong tonight 🌙';
-
-    const habits = habitService.habits();
-    if (habits.length > 0) {
-      const earliest = habits.reduce((min, h) => h.createdAt < min ? h.createdAt : min, habits[0].createdAt);
-      this.dayOfJourney = Math.max(1, Math.floor((Date.now() - new Date(earliest).getTime()) / 86400000) + 1);
-    } else {
-      this.dayOfJourney = 1;
-    }
+    if (hour < 6) this.greeting = 'Late night session 🌙';
+    else if (hour < 12) this.greeting = 'Good morning ☀️';
+    else if (hour < 17) this.greeting = 'Good afternoon 💪';
+    else if (hour < 21) this.greeting = 'Good evening 🔥';
+    else this.greeting = 'Wrapping up the day 🌙';
   }
 
   getCatColor(cat: HabitCategory): string { return CATEGORY_COLORS[cat]; }
