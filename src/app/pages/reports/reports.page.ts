@@ -140,6 +140,8 @@ import { signal } from '@angular/core';
           Share Progress
         </button>
       </div>
+
+      <div style="height: 100px;"></div>
     </ion-content>
   `,
   styles: [`

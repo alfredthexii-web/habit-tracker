@@ -111,6 +111,8 @@ import {
       </div>
 
       <!-- FABs with proper bottom offset above tab bar -->
+      <div style="height: 100px;"></div>
+
       <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 72px;">
         <ion-fab-button (click)="openModal()">
           <ion-icon name="add-outline"></ion-icon>

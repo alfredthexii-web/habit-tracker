@@ -103,6 +103,8 @@ import { moonOutline, downloadOutline, cloudUploadOutline } from 'ionicons/icons
         <p class="footer-text">Habit Tracker v1.0</p>
         <p class="footer-sub">Built with ❤️ and discipline</p>
       </div>
+
+      <div style="height: 100px;"></div>
     </ion-content>
   `,
   styles: [`
