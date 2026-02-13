@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonCheckbox, IonBadge, IonNote, IonIcon, IonChip,
-  IonModal, IonButton, IonButtons, IonTextarea,
+  IonModal, IonButton, IonButtons, IonTextarea, IonBackButton,
 } from '@ionic/angular/standalone';
 import { HabitService } from '../../services/habit.service';
 import { HabitCategory, ALL_CATEGORIES, CATEGORY_COLORS, MOOD_EMOJIS, MoodEmoji } from '../../models/habit.model';
@@ -19,15 +19,18 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonList, IonItem, IonLabel, IonCheckbox, IonBadge, IonNote, IonIcon,
     IonChip, IonModal, IonButton, IonButtons,
-    IonTextarea,
+    IonTextarea, IonBackButton,
   ],
   template: `
-    <ion-header>
+    <ion-header translucent="true">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/today"></ion-back-button>
+        </ion-buttons>
         <ion-title>Today</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content [fullscreen]="true" class="ion-padding">
       <!-- Header -->
       <div class="today-header">
         <p class="greeting">{{ greeting }}</p>
@@ -115,7 +118,7 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
                     <span>{{ getStreak(habit.id) }}</span>
                   </div>
                 }
-                <div class="check-circle"
+                <div class="habit-checkbox check-circle"
                      [class.checked]="isCompleted(habit.id)"
                      [style.border-color]="isCompleted(habit.id) ? getCatColor(habit.category) : ''"
                      [style.background]="isCompleted(habit.id) ? getCatColor(habit.category) : ''">
@@ -134,7 +137,7 @@ import { flameOutline, trophyOutline, closeOutline, checkmarkOutline } from 'ion
       <!-- Mood/Note Modal -->
       <ion-modal [isOpen]="showMoodModal()" (didDismiss)="showMoodModal.set(false)">
         <ng-template>
-          <ion-header>
+          <ion-header translucent="true">
             <ion-toolbar>
               <ion-buttons slot="start">
                 <ion-button (click)="showMoodModal.set(false)">

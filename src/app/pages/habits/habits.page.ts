@@ -6,7 +6,7 @@ import {
   IonLabel, IonButton, IonIcon, IonFab, IonFabButton, IonItemSliding,
   IonItemOptions, IonItemOption, IonModal, IonInput, IonTextarea,
   IonSelect, IonSelectOption, IonButtons, IonChip, IonBadge,
-  IonNote,
+  IonNote, IonBackButton,
 } from '@ionic/angular/standalone';
 import { Dialog } from 'primeng/dialog';
 import { HabitService } from '../../services/habit.service';
@@ -29,16 +29,19 @@ import {
     IonLabel, IonButton, IonIcon, IonFab, IonFabButton, IonItemSliding,
     IonItemOptions, IonItemOption, IonModal, IonInput, IonTextarea,
     IonSelect, IonSelectOption, IonButtons, IonChip, IonBadge,
-    IonNote,
+    IonNote, IonBackButton,
     Dialog,
   ],
   template: `
-    <ion-header>
+    <ion-header translucent="true">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/habits"></ion-back-button>
+        </ion-buttons>
         <ion-title>Habits</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content [fullscreen]="true" class="ion-padding">
       <!-- Category Filter -->
       <div class="filter-pills">
         <button (click)="selectedCategory.set(null)"
@@ -74,7 +77,7 @@ import {
                 <div class="card-content">
                   <div class="card-main">
                     <div class="card-info">
-                      <h3 class="habit-name">{{ habit.name }}</h3>
+                      <h3 class="habit-name habit-manage-name">{{ habit.name }}</h3>
                       @if (habit.description) {
                         <p class="habit-desc">{{ habit.description }}</p>
                       }
@@ -99,7 +102,7 @@ import {
               <ion-item-option style="--background: #4ADE80; --color: #111116;" (click)="editHabit(habit)">
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option style="--background: #EF4444;" (click)="deleteHabit(habit.id)">
+              <ion-item-option style="--background: #FF6B6B;" (click)="deleteHabit(habit.id)">
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-item-option>
             </ion-item-options>
@@ -108,13 +111,13 @@ import {
       </div>
 
       <!-- FABs with proper bottom offset above tab bar -->
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 16px;">
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 72px;">
         <ion-fab-button (click)="openModal()">
           <ion-icon name="add-outline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
 
-      <ion-fab vertical="bottom" horizontal="start" slot="fixed" style="margin-bottom: 16px;">
+      <ion-fab vertical="bottom" horizontal="start" slot="fixed" style="margin-bottom: 72px;">
         <ion-fab-button color="secondary" (click)="showTemplates.set(true)">
           <ion-icon name="flash-outline"></ion-icon>
         </ion-fab-button>
@@ -139,7 +142,7 @@ import {
       <!-- Habit Form Modal -->
       <ion-modal [isOpen]="showModal()" (didDismiss)="closeModal()">
         <ng-template>
-          <ion-header>
+          <ion-header translucent="true">
             <ion-toolbar>
               <ion-buttons slot="start">
                 <ion-button (click)="closeModal()">

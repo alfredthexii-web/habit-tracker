@@ -2,7 +2,7 @@ import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonToggle, IonButton, IonIcon, IonCard, IonCardHeader,
+  IonLabel, IonToggle, IonButton, IonIcon, IonCard, IonCardHeader, IonBackButton, IonButtons,
   IonCardTitle, IonCardContent,
 } from '@ionic/angular/standalone';
 import { HabitService } from '../../services/habit.service';
@@ -15,16 +15,19 @@ import { moonOutline, downloadOutline, cloudUploadOutline } from 'ionicons/icons
   imports: [
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-    IonLabel, IonToggle, IonButton, IonIcon, IonCard, IonCardHeader,
+    IonLabel, IonToggle, IonButton, IonIcon, IonCard, IonCardHeader, IonBackButton, IonButtons,
     IonCardTitle, IonCardContent,
   ],
   template: `
-    <ion-header>
+    <ion-header translucent="true">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/settings"></ion-back-button>
+        </ion-buttons>
         <ion-title>Settings</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content [fullscreen]="true" class="ion-padding">
 
       <!-- Profile -->
       <div class="settings-group">

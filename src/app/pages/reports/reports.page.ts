@@ -2,7 +2,7 @@ import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader,
-  IonCardTitle, IonCardContent, IonIcon, IonButton, IonChip,
+  IonCardTitle, IonCardContent, IonIcon, IonButton, IonChip, IonBackButton, IonButtons,
 } from '@ionic/angular/standalone';
 import { UIChart } from 'primeng/chart';
 import { ProgressBar } from 'primeng/progressbar';
@@ -18,16 +18,19 @@ import { signal } from '@angular/core';
   imports: [
     CommonModule,
     IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader,
-    IonCardTitle, IonCardContent, IonIcon, IonButton, IonChip,
+    IonCardTitle, IonCardContent, IonIcon, IonButton, IonChip, IonBackButton, IonButtons,
     UIChart, ProgressBar,
   ],
   template: `
-    <ion-header>
+    <ion-header translucent="true">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button defaultHref="/reports"></ion-back-button>
+        </ion-buttons>
         <ion-title>Reports</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content [fullscreen]="true" class="ion-padding">
 
       <!-- AI Insights -->
       @if (insights().length > 0) {

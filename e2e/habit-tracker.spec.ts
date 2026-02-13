@@ -12,40 +12,47 @@ async function goTab(page: Page, tab: string) {
   await page.waitForTimeout(600);
 }
 
-async function clickFab(page: Page, horizontal: string) {
-  await page.evaluate((h) => {
-    const fab = document.querySelector(`ion-fab[horizontal="${h}"] ion-fab-button`) as HTMLElement;
-    if (fab) fab.dispatchEvent(new Event('click', { bubbles: true }));
-  }, horizontal);
-  await page.waitForTimeout(1000);
+async function jsClick(page: Page, selector: string) {
+  await page.evaluate((sel) => {
+    const el = document.querySelector(sel) as HTMLElement;
+    if (el) el.click();
+  }, selector);
+}
+
+// Find the VISIBLE (open) ion-modal
+function visibleModal(page: Page) {
+  return page.locator('ion-modal.show-modal');
 }
 
 async function fillIonInput(page: Page, label: string, value: string) {
-  const ionInput = page.locator(`ion-input[label="${label}"]`);
-  await ionInput.waitFor({ timeout: 5000 });
-  await ionInput.locator('input').fill(value);
+  const modal = visibleModal(page);
+  const ionInput = modal.locator(`ion-input[label="${label}"]`);
+  await ionInput.click();
+  await page.waitForTimeout(100);
+  await page.keyboard.type(value);
 }
 
 async function fillIonTextarea(page: Page, label: string, value: string) {
-  const ionTa = page.locator(`ion-textarea[label="${label}"]`);
-  await ionTa.waitFor({ timeout: 5000 });
-  await ionTa.locator('textarea').fill(value);
+  const modal = visibleModal(page);
+  const ionTa = modal.locator(`ion-textarea[label="${label}"]`);
+  await ionTa.click();
+  await page.waitForTimeout(100);
+  await page.keyboard.type(value);
 }
 
 async function createHabit(page: Page, name: string, description?: string) {
-  await clickFab(page, 'end');
-
-  // Wait for modal to be visible
-  await page.locator('ion-modal.show-modal').waitFor({ timeout: 5000 });
+  await jsClick(page, 'ion-fab[horizontal="end"] ion-fab-button');
+  await page.waitForTimeout(1000);
 
   await fillIonInput(page, 'Name', name);
   if (description) {
     await fillIonTextarea(page, 'Description', description);
   }
 
-  // Click save button in modal
-  await page.locator('ion-modal.show-modal ion-toolbar ion-buttons[slot="end"] ion-button').click();
-  await page.waitForTimeout(500);
+  // Click save on the visible modal
+  const modal = visibleModal(page);
+  await modal.locator('ion-toolbar ion-buttons[slot="end"] ion-button').click({ force: true });
+  await page.waitForTimeout(800);
 }
 
 test.describe('Habit Tracker E2E', () => {
@@ -72,7 +79,7 @@ test.describe('Habit Tracker E2E', () => {
   test('Create a habit via Habits page', async ({ page }) => {
     await goTab(page, 'habits');
     await createHabit(page, 'Test Habit', 'A test description');
-    await expect(page.locator('app-habits .habit-name')).toContainText('Test Habit');
+    await expect(page.locator('.habit-manage-name').first()).toContainText('Test Habit');
   });
 
   test('Habit appears on Today page after creation', async ({ page }) => {
@@ -80,22 +87,23 @@ test.describe('Habit Tracker E2E', () => {
     await createHabit(page, 'Daily Pushups', 'Do 20 pushups');
 
     await goTab(page, 'today');
-    await expect(page.locator('app-today .habit-name')).toContainText('Daily Pushups');
+    await expect(page.locator('app-today .habit-name').first()).toContainText('Daily Pushups');
   });
 
-  test('Complete a habit', async ({ page }) => {
+  test('Complete a habit (check it off)', async ({ page }) => {
     await goTab(page, 'habits');
     await createHabit(page, 'Meditation');
 
     await goTab(page, 'today');
-    await expect(page.locator('app-today .habit-name')).toContainText('Meditation');
+    await expect(page.locator('app-today .habit-name').first()).toContainText('Meditation');
 
-    // Click the card body to toggle (opens mood modal)
-    await page.locator('app-today .card-body').first().click();
+    // Click the custom checkbox
+    await jsClick(page, 'app-today .habit-checkbox');
     await page.waitForTimeout(800);
 
-    // Save mood modal (checkmark button)
-    await page.locator('ion-modal.show-modal ion-toolbar ion-buttons[slot="end"] ion-button').click();
+    // Mood modal — click save on the VISIBLE modal
+    const modal = visibleModal(page);
+    await modal.locator('ion-toolbar ion-buttons[slot="end"] ion-button').click({ force: true });
     await page.waitForTimeout(500);
 
     await expect(page.locator('app-today .habit-card.completed')).toBeVisible();
@@ -104,17 +112,21 @@ test.describe('Habit Tracker E2E', () => {
   test('Delete a habit', async ({ page }) => {
     await goTab(page, 'habits');
     await createHabit(page, 'To Delete');
-    await expect(page.locator('app-habits .habit-name')).toContainText('To Delete');
+    await expect(page.locator('.habit-manage-name').first()).toContainText('To Delete');
 
-    // Open sliding options programmatically
+    // Open sliding options
     await page.locator('ion-item-sliding').first().evaluate((el: any) => el.open('end'));
     await page.waitForTimeout(400);
 
     // Click delete option
-    await page.locator('ion-item-option').last().click();
+    await page.evaluate(() => {
+      const options = document.querySelectorAll('ion-item-option');
+      const del = Array.from(options).find(o => (o as HTMLElement).style.cssText.includes('FF6B6B'));
+      if (del) (del as HTMLElement).click();
+    });
     await page.waitForTimeout(500);
 
-    await expect(page.locator('app-habits .habit-name')).toHaveCount(0);
+    await expect(page.locator('.habit-manage-name')).toHaveCount(0);
   });
 
   test('Dark mode toggle on Settings', async ({ page }) => {
@@ -122,16 +134,39 @@ test.describe('Habit Tracker E2E', () => {
 
     const darkBefore = await page.evaluate(() => document.body.classList.contains('dark'));
 
-    await page.locator('ion-toggle').click();
+    await page.evaluate(() => {
+      const toggle = document.querySelector('app-settings ion-toggle') as any;
+      if (toggle) toggle.click();
+    });
     await page.waitForTimeout(300);
 
     const darkAfter = await page.evaluate(() => document.body.classList.contains('dark'));
     expect(darkAfter).not.toBe(darkBefore);
 
-    await page.locator('ion-toggle').click();
+    await page.evaluate(() => {
+      const toggle = document.querySelector('app-settings ion-toggle') as any;
+      if (toggle) toggle.click();
+    });
     await page.waitForTimeout(300);
 
     const darkFinal = await page.evaluate(() => document.body.classList.contains('dark'));
     expect(darkFinal).toBe(darkBefore);
+  });
+
+  test('Template quick-add', async ({ page }) => {
+    await goTab(page, 'habits');
+
+    // Click template FAB
+    await jsClick(page, 'ion-fab[horizontal="start"] ion-fab-button');
+    await page.waitForTimeout(1000);
+
+    // Click first template item
+    await jsClick(page, '.template-item');
+    await page.waitForTimeout(800);
+
+    await expect(page.locator('.habit-manage-name').first()).toContainText('Drink Water');
+
+    await goTab(page, 'today');
+    await expect(page.locator('app-today .habit-name').first()).toContainText('Drink Water');
   });
 });
